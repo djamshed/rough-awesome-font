@@ -1,0 +1,140 @@
+:root {
+  --primary-color: #0099cc;
+  --inspected-font-size: 150px;
+}
+
+body {
+  color: #999;
+  padding: 10px;
+}
+
+.main-container {
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.load-more {
+  color: var(--primary-color);
+  font-size: 20px;
+  margin-top: 20px;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.inspected-symbol-name {
+  color: #333;
+  font-size: 24px;
+  display: inline-block;
+  margin: 20px 0 10px;
+}
+
+.actions-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.action-item {
+  margin-right: 20px;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.search-box {
+  border: 1px solid lightgray;
+  border-radius: 4px;
+  font-size: 18px;
+  padding: 8px 16px;
+  width: 100%;
+}
+.search-shortcut {
+  border-bottom: 1px dashed;
+  cursor: pointer;
+}
+
+.background-patterns svg rect {
+  cursor: pointer;
+}
+
+.no-pattern-label {
+  fill: #999;
+  font-size: 14px;
+  transform: translate(256px, 14px);
+  pointer-events: none;
+}
+
+.inspect-container {
+  display: flex;
+  margin-bottom: 40px;
+}
+
+.inpect-rough-symbol {
+  width: var(--inspected-font-size, 50px);
+  margin: 0 20px;
+}
+
+.inspect-fa-symbol {
+  font-size: var(--inspected-font-size, 50px);
+  color: var(--primary-color);
+}
+
+.symbols-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 80px);
+  row-gap: 16px;
+}
+
+.icon-container {
+  display: inline-block;
+  text-align: center;
+}
+
+.icon-container .icon-name {
+  font-size: 14px;
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.icon,
+.icon-name {
+  cursor: pointer;
+}
+
+.icon svg {
+  height: 50px;
+}
+
+.rough-icon {
+  stroke: var(--primary-color);
+}
+
+.hachure-pattern .rough-icon {
+  fill: url(#hachure);
+}
+
+.zigzag-pattern .rough-icon {
+  fill: url(#zigzag);
+}
+
+.cross-hatch-pattern .rough-icon {
+  fill: url(#cross-hatch);
+}
+
+.dashed-pattern .rough-icon {
+  fill: url(#dashed);
+}
+
+.solid-pattern .rough-icon {
+  fill: var(--primary-color);
+  fill-opacity: 0.3;
+}
+
+.no-pattern .rough-icon {
+  fill: none;
+}
+
+pattern path {
+  stroke: var(--primary-color);
+  stroke-opacity: 0.7;
+  stroke-width: 0.4;
+}
