@@ -1,0 +1,15 @@
+{
+  "name": "rough-awesome-font",
+  "version": "1.0.0",
+  "description": "Rough.js + Font Awesome",
+  "main": "index.js",
+  "author": "Djam Saidmuradov",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "roughjs": "^4.3.1",
+    "svg-path-tools": "^1.0.0"
+  }
+}
