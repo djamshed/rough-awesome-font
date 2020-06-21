@@ -5,11 +5,17 @@ const domSymbolTitle = document.querySelector('.inspected-symbol-name');
 const domSearchShortcut = document.querySelectorAll('.search-shortcut');
 const domFaSymbol = document.querySelector('.inspect-fa-symbol');
 const domRoughSymbol = document.querySelector('.inpect-rough-symbol svg');
+const domRoughOutput = document.querySelector('.inspect-rough-output');
+const rootStyle = document.documentElement.style;
 
 const awesomplete = new Awesomplete(domSearchbox, { minChars: 1 });
+
 const LIMIT = 20;
+let symbolsDocument;
 let allSymbols = [];
 let numRendered = 0;
+let currentPattern = 'hachure-pattern';
+let currentSymbol = '';
 
 function renderSymbols(container, symbols = []) {
   if (!container) return;
@@ -19,7 +25,7 @@ function renderSymbols(container, symbols = []) {
       return `<div class="icon-container" data-symbol="${symbol}">
     <div class="icon" data-symbol="${symbol}">
       <svg  viewBox="0 0 100 100" data-symbol="${symbol}">
-        <use data-symbol="${symbol}" xlink:href="rough/rough-brands.svg#${symbol}" class="rough-icon"></use>
+        <use data-symbol="${symbol}" xlink:href="rough/rough-brands.svg#rough_${symbol}" class="rough-icon"></use>
       </svg>
     </div>
     <span class="icon-name" data-symbol="${symbol}">${symbol}</a>
@@ -36,43 +42,92 @@ const getRandomSymbol = () => {
   return allSymbols[rand];
 };
 
-async function fetchAndRender(limit = 100) {
+async function fetchRawSymbols() {
+  const roughBrandSymbols = await fetch(new Request('rough/rough-brands.svg'));
+
+  if (roughBrandSymbols.ok) {
+    const parser = new DOMParser();
+    symbolsDocument = parser.parseFromString(
+      await roughBrandSymbols.text(),
+      'image/svg+xml'
+    );
+  }
+}
+
+async function fetchSymbolNames() {
   const response = await fetch(new Request('rough/rough-brands.json'));
+
   if (response.ok) {
     allSymbols = await response.json();
     awesomplete.list = allSymbols;
-    renderNextBatch();
-
-    // show random symbol
-    selectSymbol();
   }
 }
+
+const updateSvgOutput = () => {
+  const color = rootStyle.getPropertyValue('--primary-color');
+  const symbolHTML = symbolsDocument.querySelector(`#rough_${currentSymbol}`)
+    .outerHTML;
+
+  let patternHTML = '';
+  let fill = '';
+
+  if (currentPattern === 'no-pattern') {
+    fill = 'fill: none;';
+  } else if (currentPattern === 'solid-pattern') {
+    fill = `fill: ${color}; fill-opacity: 0.4;`;
+  } else if (currentPattern.indexOf('-pattern') > -1) {
+    patternHTML = document.querySelector(
+      'pattern#' + currentPattern.replace('-pattern', '')
+    ).outerHTML;
+    fill = `fill: url(#${currentPattern.replace('-pattern', '')});`;
+  }
+
+  const svg = `<svg width="50" height="50">
+    <style> path { stroke: ${color}; ${fill} } </style>
+
+    ${patternHTML}
+
+    ${symbolHTML}
+
+    <use xlink:href="#rough_${currentSymbol}"></use>
+
+  </svg>`;
+
+  domRoughOutput.value = svg;
+};
 
 const updatePattern = (e) => {
   const pattern = e.target.dataset.pattern;
   if (pattern) {
+    currentPattern = pattern;
     domSymbolsContainer.className = 'symbols-container ' + pattern;
     domInspectContainer.className = 'inspect-container ' + pattern;
+    updateSvgOutput();
   }
 };
 
 const updateMainColor = (e) => {
-  document.documentElement.style.setProperty('--primary-color', e.target.value);
+  rootStyle.setProperty('--primary-color', e.target.value);
+  updateSvgOutput();
 };
 
 const selectSymbol = (symbol) => {
   if (!symbol) symbol = getRandomSymbol();
 
-  domSymbolTitle.textContent = symbol;
+  currentSymbol = symbol;
+
+  domSymbolTitle.textContent = currentSymbol;
   domSymbolTitle.setAttribute(
     'href',
-    `https://fontawesome.com/icons/${symbol}`
+    `https://fontawesome.com/icons/${currentSymbol}`
   );
 
-  const faSymbol = `<i class="fab fa-${symbol}"></i>`;
-  const roughSymbol = `<use xlink:href="rough/rough-brands.svg#${symbol}" class="rough-icon"></use>`;
+  const faSymbol = `<i class="fab fa-${currentSymbol}"></i>`;
+  const roughSymbol = `<use xlink:href="rough/rough-brands.svg#rough_${currentSymbol}" class="rough-icon"></use>`;
   domFaSymbol.innerHTML = faSymbol;
   domRoughSymbol.innerHTML = roughSymbol;
+
+  updateSvgOutput();
 };
 
 const renderNextBatch = () => {
@@ -85,7 +140,10 @@ const renderNextBatch = () => {
   }
 };
 
-function start() {
+async function start() {
+  // initialize color
+  rootStyle.setProperty('--primary-color', '#0099cc');
+
   document
     .querySelector('.color-picker')
     .addEventListener('change', updateMainColor, false);
@@ -115,7 +173,11 @@ function start() {
     domSearchbox.value = '';
   });
 
-  fetchAndRender(LIMIT);
+  await fetchRawSymbols();
+  await fetchSymbolNames();
+  renderNextBatch();
+  // show random symbol
+  selectSymbol();
 }
 
 start();

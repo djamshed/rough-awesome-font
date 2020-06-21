@@ -68,9 +68,12 @@ body {
   margin-bottom: 40px;
 }
 
+.inspect-container > * {
+  margin-right: 20px;
+}
+
 .inpect-rough-symbol {
   width: var(--inspected-font-size, 50px);
-  margin: 0 20px;
 }
 
 .inspect-fa-symbol {
@@ -133,8 +136,8 @@ body {
   fill: none;
 }
 
-pattern path {
+.patterns-container {
+  width: 0;
+  height: 0;
   stroke: var(--primary-color);
-  stroke-opacity: 0.7;
-  stroke-width: 0.4;
 }

@@ -24,7 +24,7 @@ const createPattern = ({ name, options = { fill: 'red' } }) => {
 
   const d = scalePath(fill.d, { decimals: 1 });
   return `<pattern id="${name}" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-  <path fill="none" d="${d}" />
+  <path style="stroke-opacity: 0.7; stroke-width: 0.4; fill: none;" d="${d}" />
 </pattern>`;
 };
 
@@ -41,7 +41,7 @@ function roughenSymbol(d, viewBox, id) {
   const vb = `viewBox="${viewBox.x} ${viewBox.y} ${Math.ceil(
     viewBox.width * SCALE
   )} ${Math.ceil(viewBox.height * SCALE)}"`;
-  return `<symbol id="${id}" ${vb}>
+  return `<symbol id="rough_${id}" ${vb}>
   <title>${id}</title>
   ${rOutlines.join('')}
   <path class="rough-mask" stroke="none" d="${scaledPath}"/>
