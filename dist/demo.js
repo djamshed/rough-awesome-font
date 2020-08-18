@@ -83,7 +83,7 @@ async function fetchSymbolNames() {
   symbolType.brands = new Set(brands);
   symbolType.regular = new Set(regular);
   symbolType.solid = new Set(solid);
-  allSymbols = [].concat(solid).concat(brands).concat(regular);
+  allSymbols = [].concat(brands).concat(solid).concat(regular);
 
   awesomplete.list = allSymbols;
 }
