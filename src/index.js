@@ -4,7 +4,6 @@ const { parse, scale, stringify } = require('svg-path-tools');
 const Utils = require('./util');
 
 const SCALE = 0.1; // SVG symbols are typically high-res, scale symbols down (no need to be precise)
-const SOURCE = 'raw/fontawesome-free-5.13.0-web/sprites/brands.svg';
 const DESTINATION = 'dist/rough';
 
 const scalePath = (d, { scaleBy = 1, decimals = 1 }) => {
@@ -59,23 +58,32 @@ const processSymbol = ({ names = [], roughSymbols = '' }, symbol) => {
   };
 };
 
-async function startSprites() {
-  const sprite = await Utils.getFileContent(SOURCE);
-  const symbols = sprite.match(/<symbol[^>]*>((.|\n)*?)<\/symbol>/g);
+async function processSprites() {
+  // files under raw/sprites/
+  const spriteFiles = [
+    'brands', // raw/sprites/brands.svg
+    'regular',
+    'solid',
+  ];
+  for (let fileName of spriteFiles) {
+    const sprite = await Utils.getFileContent(`raw/sprites/${fileName}.svg`);
+    const symbols = sprite.match(/<symbol[^>]*>((.|\n)*?)<\/symbol>/g);
+    const { names, roughSymbols } = symbols.reduce(processSymbol, {
+      names: [],
+      roughSymbols: '',
+    });
+    const roughSvgSprite = wrapIntoSvg(roughSymbols);
 
-  const { names, roughSymbols } = symbols.reduce(processSymbol, {
-    names: [],
-    roughSymbols: '',
-  });
-
-  const roughSvgSprite = wrapIntoSvg(roughSymbols);
-
-  // save to file
-  await Utils.saveFile(`${DESTINATION}/rough-brands.svg`, roughSvgSprite);
-  await Utils.saveFile(
-    `${DESTINATION}/rough-brands.json`,
-    JSON.stringify(names)
-  );
+    // save to file
+    await Utils.saveFile(
+      `${DESTINATION}/rough-${fileName}.svg`,
+      roughSvgSprite
+    );
+    await Utils.saveFile(
+      `${DESTINATION}/rough-${fileName}.json`,
+      JSON.stringify(names)
+    );
+  }
 
   const patterns = [
     {
@@ -126,4 +134,4 @@ async function startSprites() {
   );
 }
 
-startSprites();
+processSprites();
