@@ -24,10 +24,11 @@ function renderSymbols(container, symbols = []) {
 
   const html = symbols
     .map((symbol) => {
+      const { id } = getSymbolDetails(symbol);
       return `<div class="icon-container" data-symbol="${symbol}">
     <div class="icon" data-symbol="${symbol}">
       <svg  viewBox="0 0 100 100" data-symbol="${symbol}">
-        <use data-symbol="${symbol}" xlink:href="rough/rough-brands.svg#rough_${symbol}" class="rough-icon"></use>
+        <use data-symbol="${symbol}" xlink:href="${id}" class="rough-icon"></use>
       </svg>
     </div>
     <span class="icon-name" data-symbol="${symbol}">${symbol}</a>
@@ -82,7 +83,7 @@ async function fetchSymbolNames() {
   symbolType.brands = new Set(brands);
   symbolType.regular = new Set(regular);
   symbolType.solid = new Set(solid);
-  allSymbols = [].concat(brands).concat(regular).concat(solid);
+  allSymbols = [].concat(solid).concat(brands).concat(regular);
 
   awesomplete.list = allSymbols;
 }
@@ -142,15 +143,15 @@ const getSymbolDetails = (symbolName) => {
       className: `fab fa-${symbolName}`,
       id: `rough/rough-brands.svg#rough_${symbolName}`,
     };
-  if (symbolType.regular.has(symbolName))
-    return {
-      className: `far fa-${symbolName}`,
-      id: `rough/rough-regular.svg#rough_${symbolName}`,
-    };
   if (symbolType.solid.has(symbolName))
     return {
       className: `fas fa-${symbolName}`,
       id: `rough/rough-solid.svg#rough_${symbolName}`,
+    };
+  if (symbolType.regular.has(symbolName))
+    return {
+      className: `far fa-${symbolName}`,
+      id: `rough/rough-regular.svg#rough_${symbolName}`,
     };
   return { className: '', id: '' };
 };
