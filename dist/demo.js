@@ -10,9 +10,11 @@ const rootStyle = document.documentElement.style;
 
 const awesomplete = new Awesomplete(domSearchbox, { minChars: 1 });
 
-const LIMIT = 20;
-let symbolsDocument;
+const DISPLAY_BATCH_SIZE = 20;
+
+const symbolsDocument = new Document();
 let allSymbols = [];
+let symbolType = {};
 let numRendered = 0;
 let currentPattern = 'hachure-pattern';
 let currentSymbol = '';
@@ -43,31 +45,54 @@ const getRandomSymbol = () => {
 };
 
 async function fetchRawSymbols() {
-  const roughBrandSymbols = await fetch(new Request('rough/rough-brands.svg'));
+  const promises = [
+    'rough/rough-brands.svg',
+    'rough/rough-regular.svg',
+    'rough/rough-solid.svg',
+  ].map((url) => fetch(url));
 
-  if (roughBrandSymbols.ok) {
-    const parser = new DOMParser();
-    symbolsDocument = parser.parseFromString(
-      await roughBrandSymbols.text(),
-      'image/svg+xml'
-    );
-  }
+  // fetch all files
+  const responses = await Promise.all(promises);
+  // read responses
+  const svgs = await Promise.all(responses.map((r) => r.text()));
+
+  const body = document.createElement('body');
+  svgs.forEach((rawSvg) => {
+    let svg = new DOMParser().parseFromString(rawSvg, 'image/svg+xml');
+    body.appendChild(svg.querySelector('svg'));
+  });
+
+  symbolsDocument.appendChild(body);
 }
 
 async function fetchSymbolNames() {
-  const response = await fetch(new Request('rough/rough-brands.json'));
+  const promises = [
+    'rough/rough-brands.json',
+    'rough/rough-regular.json',
+    'rough/rough-solid.json',
+  ].map((url) => fetch(url));
 
-  if (response.ok) {
-    allSymbols = await response.json();
-    awesomplete.list = allSymbols;
-  }
+  // fetch all files
+  const responses = await Promise.all(promises);
+  // read responses
+  const [brands, regular, solid] = await Promise.all(
+    responses.map((r) => r.json())
+  );
+  // update global vars
+  symbolType.brands = new Set(brands);
+  symbolType.regular = new Set(regular);
+  symbolType.solid = new Set(solid);
+  allSymbols = [].concat(brands).concat(regular).concat(solid);
+
+  awesomplete.list = allSymbols;
 }
 
 const updateSvgOutput = () => {
-  const color = rootStyle.getPropertyValue('--primary-color');
-  const symbolHTML = symbolsDocument.querySelector(`#rough_${currentSymbol}`)
-    .outerHTML;
+  const symbolHTML = symbolsDocument?.querySelector(`#rough_${currentSymbol}`)
+    ?.outerHTML;
 
+  if (!symbolHTML) return;
+  const color = rootStyle.getPropertyValue('--primary-color');
   let patternHTML = '';
   let fill = '';
 
@@ -82,7 +107,7 @@ const updateSvgOutput = () => {
     fill = `fill: url(#${currentPattern.replace('-pattern', '')});`;
   }
 
-  const svg = `<svg width="50" height="50">
+  const svg = `<svg width="150" height="150">
     <style> path { stroke: ${color}; ${fill} } </style>
 
     ${patternHTML}
@@ -111,6 +136,25 @@ const updateMainColor = (e) => {
   updateSvgOutput();
 };
 
+const getSymbolDetails = (symbolName) => {
+  if (symbolType.brands.has(symbolName))
+    return {
+      className: `fab fa-${symbolName}`,
+      id: `rough/rough-brands.svg#rough_${symbolName}`,
+    };
+  if (symbolType.regular.has(symbolName))
+    return {
+      className: `far fa-${symbolName}`,
+      id: `rough/rough-regular.svg#rough_${symbolName}`,
+    };
+  if (symbolType.solid.has(symbolName))
+    return {
+      className: `fas fa-${symbolName}`,
+      id: `rough/rough-solid.svg#rough_${symbolName}`,
+    };
+  return { className: '', id: '' };
+};
+
 const selectSymbol = (symbol) => {
   if (!symbol) symbol = getRandomSymbol();
 
@@ -122,8 +166,10 @@ const selectSymbol = (symbol) => {
     `https://fontawesome.com/icons/${currentSymbol}`
   );
 
-  const faSymbol = `<i class="fab fa-${currentSymbol}"></i>`;
-  const roughSymbol = `<use xlink:href="rough/rough-brands.svg#rough_${currentSymbol}" class="rough-icon"></use>`;
+  const { className, id } = getSymbolDetails(currentSymbol);
+
+  const faSymbol = `<i class="${className}"></i>`;
+  const roughSymbol = `<use xlink:href="${id}" class="rough-icon"></use>`;
   domFaSymbol.innerHTML = faSymbol;
   domRoughSymbol.innerHTML = roughSymbol;
 
@@ -134,9 +180,9 @@ const renderNextBatch = () => {
   if (numRendered < allSymbols.length) {
     renderSymbols(
       domSymbolsContainer,
-      allSymbols.slice(numRendered, numRendered + LIMIT)
+      allSymbols.slice(numRendered, numRendered + DISPLAY_BATCH_SIZE)
     );
-    numRendered += LIMIT;
+    numRendered += DISPLAY_BATCH_SIZE;
   }
 };
 
